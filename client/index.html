@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+<body>
+<button id="login" onclick="login()">Log IN</button>
+<button id='session' onclick="getSession()">Get session</button>	
+<button onclick="getAll()">Get Products</button>
+<button class="logout" onclick="logout()">Logout</button>
+<p class="loader" style="display: none;">Loading</p>
+	<ul></ul>
+
+<p class="error" style="display: none; color: red">Unauthorized access</p>
+
+<button id="getarray" onclick="findByIds()">GetArray</button>
+</body>
+
+<script type="text/javascript">
+	const login = ()=>{
+	fetch('http://localhost:5000/api/auth/login',{
+		method:'POST',
+		body:`{
+		"password":"admin",
+		"email":"g@mail.ru"
+		}`,
+		headers:{
+			'Content-Type':'application/json'
+		}
+	}).then(resp=>{
+		return resp.json()
+	})
+			.then(json=>{
+				console.log(json)
+			})
+}
+
+	const findByIds = () =>{
+		fetch('http://localhost:5000/api/products/findbyids',{
+			method:'POST',
+			body:JSON.parse(['609db2ecce1b100ff8cfde3b', '609db33b5f533609b06b9e42']),
+			headers:{
+				'Content-Type':'application/json'
+			}
+		})
+				.then(j=>j.json())
+				.then(r=>console.log(r))
+	}
+
+
+
+
+	const getSession = async ()=>{
+	fetch('http://localhost:5000/api/auth/test').then(r=>r.json()).then(j=>console.log('Session test', j))
+}
+
+const logout = async ()=>{
+	const r = await fetch('http://localhost:5000/api/auth/logout')
+	const j = await r.json()
+
+	console.log(j)
+}
+
+const getAll = async () => {
+	try{
+		document.querySelector('ul').innerHTML=''
+		document.querySelector('.loader').style.display='block'
+
+		const connect = await fetch('http://localhost:5000/api/products/getall')
+		const response = await connect.json()
+
+		document.querySelector('.loader').style.display='none'
+
+
+		document.querySelector('ul').innerHTML = response.map(p=>`<li>${p.name} <button class="add" onclick="addToCart('${p._id}')" data-id="${p._id}">+</button></li>`).join('')
+	}
+	catch(err){
+		document.querySelector('ul').innerHTML='Error, probably you are not authorized'
+		console.log('Something wrong: '+ err)
+	}
+
+}
+
+const addToCart = async (pid)=>{
+	fetch('http://localhost:5000/api/cart/add',{
+		method:'POST',
+		body:`{
+		"pid":"${pid}"
+		}`,
+		headers:{
+			'Content-Type':'application/json'
+		}
+	}).then(resp=>{
+		return resp.json()
+	})
+			.then(json=>{
+				console.log(json)
+			})
+}
+
+
+
+</script>
+</html>
